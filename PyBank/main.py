@@ -1,45 +1,54 @@
 import os
 import csv
 
-def data_pull(csv):
-    months = 0
-    total = 0
-    high_month = ""
-    high_profit = 0
-    average_change = 0
-    low_month = ""
-    low_profit = 0
-    last_month = None
-    changes = []
-    for row in csv:
-        current_month = row[0]
-        net_total = int(row[1])
-        total += net_total
-        months += 1
-        if last_month is not None:
-            current_change = net_total-last_month
-            changes.append(current_change)
-            if current_change > high_profit:
-                high_profit = current_change
-                high_month = current_month
-            if current_change < low_profit:
-                low_profit = current_change
-                low_month = current_month
+file = os.path.join("budget_data.csv")
 
-        last_month = net_total
-    average_change = sum(changes)/len(changes)
-    return [months, total, high_profit, low_profit, average_change]
+total_months = 0
+total_profit = 0
+greatest_inc = 0
+greatest_inc_month = ""
+greatest_dec = 0
+greatest_dec_month = ""
 
-with open("budget_data.csv") as file:
-    csvreader = csv.reader(file, delimiter = ',')
+prev_pl = 0
+changes = []
+
+with open(file) as data:
+    csvreader = csv.reader(data, delimiter = ",")
     header = next(csvreader)
-    data = data_pull(csvreader)
-print(f"""
-Financial Analysis
-----------------
-Total Months: {data[0]}
-Total: ${round(data[1], 2)}
-Average Change: ${round(data[4], 2)}
-Greatest Increase: {data[5]} (${data[2]})
-Greatest Decrease: {data[6]} (${data[3]})
-""")
+    for row in csvreader:
+        date = row[0]
+        pl = int(row[1])
+        total_profit += pl
+        total_months += 1
+
+        change = pl - prev_pl
+        if total_months != 1:
+            changes.append(change)
+        if change > greatest_inc:
+            greatest_inc = change
+            greatest_inc_month = date
+        if change < greatest_dec:
+            greatest_dec = change
+            greatest_dec_month = date
+
+        prev_pl = pl
+      
+avg_change = round(sum(changes)/len(changes), 2)
+monthly_avg_profit = int(round(total_profit/total_months, 0))
+analysis = f"""
+Total Profit: ${total_profit}
+Total Months: {total_months}
+Average Monthly Change: ${avg_change}
+Greatest Increase: {greatest_inc_month}, ${greatest_inc}
+Greatest Decrease: {greatest_dec_month}, ${greatest_dec} 
+"""
+print(analysis)
+
+output_file = "output.txt"
+with open(output_file, "w") as doc:
+    doc.write(analysis)
+
+
+
+
